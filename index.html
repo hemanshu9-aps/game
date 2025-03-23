@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cricket Jump Game</title>
+    <style>
+        body {
+            background-color: #f4f4f4;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            touch-action: manipulation;
+            font-family: Arial, sans-serif;
+        }
+
+        .game-container {
+            position: relative;
+            width: 800px;
+            height: 400px;
+            overflow: hidden;
+            border-bottom: 2px solid #333;
+        }
+
+        #batsman {
+            position: absolute;
+            width: 40px;
+            height: 60px;
+            bottom: 0;
+            left: 100px;
+            background-color: #333;
+            border-radius: 5px;
+            transition: transform 0.3s;
+            z-index: 2;
+        }
+
+        #ball {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background-color: #ff4444;
+            border-radius: 50%;
+            right: -30px;
+            bottom: 20px;
+        }
+
+        #score {
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .game-over {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.2);
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 18px;
+            background: #333;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div id="score">Score: 0</div>
+        <div id="batsman"></div>
+        <div id="ball"></div>
+        <div class="game-over">
+            <h2>🏏 Game Over! 🏏</h2>
+            <p>Score: <span id="final-score">0</span></p>
+            <button onclick="startGame()">Play Again</button>
+        </div>
+    </div>
+
+    <script>
+        let batsman = document.getElementById('batsman');
+        let ball = document.getElementById('ball');
+        let scoreElement = document.getElementById('score');
+        let gameOverScreen = document.querySelector('.game-over');
+        let finalScoreElement = document.getElementById('final-score');
+        
+        let isPlaying = false;
+        let score = 0;
+        let ballSpeed = 5;
+        let gravity = 0.8;
+        let jumpForce = -15;
+        let velocity = 0;
+        let position = 0;
+
+        function startGame() {
+            isPlaying = true;
+            score = 0;
+            ballSpeed = 5;
+            position = 0;
+            velocity = 0;
+            ball.style.right = '-30px';
+            gameOverScreen.style.display = 'none';
+            batsman.style.transform = 'translateY(0)';
+            scoreElement.textContent = `Score: ${score}`;
+            updateGame();
+            moveBall();
+        }
+
+        function updateGame() {
+            if (!isPlaying) return;
+
+            // Apply gravity
+            velocity += gravity;
+            position += velocity;
+            
+            // Floor collision
+            if (position > 0) {
+                position = 0;
+                velocity = 0;
+            }
+
+            batsman.style.transform = `translateY(${position}px)`;
+            checkCollision();
+            requestAnimationFrame(updateGame);
+        }
+
+        function jump() {
+            if (position === 0) {
+                velocity = jumpForce;
+                score++;
+                scoreElement.textContent = `Score: ${score}`;
+                
+                // Gradually increase speed
+                if (score % 10 === 0) {
+                    ballSpeed *= 1.1;
+                }
+            }
+        }
+
+        function moveBall() {
+            let pos = -30;
+            
+            function animate() {
+                if (!isPlaying) return;
+                
+                pos += ballSpeed;
+                ball.style.right = `${pos}px`;
+
+                if (pos > 800) {
+                    pos = -30;
+                }
+
+                requestAnimationFrame(animate);
+            }
+            
+            animate();
+        }
+
+        function checkCollision() {
+            let ballRect = ball.getBoundingClientRect();
+            let batsmanRect = batsman.getBoundingClientRect();
+
+            if (
+                ballRect.left < batsmanRect.right &&
+                ballRect.right > batsmanRect.left &&
+                ballRect.top < batsmanRect.bottom &&
+                ballRect.bottom > batsmanRect.top
+            ) {
+                gameOver();
+            }
+        }
+
+        function gameOver() {
+            isPlaying = false;
+            finalScoreElement.textContent = score;
+            gameOverScreen.style.display = 'block';
+        }
+
+        // Controls
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') jump();
+        });
+
+        document.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            jump();
+        });
+
+        // Start game
+        startGame();
+    </script>
+</body>
+</html>
